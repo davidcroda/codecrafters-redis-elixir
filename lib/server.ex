@@ -19,6 +19,35 @@ defmodule Server do
     # Uncomment this block to pass the first stage
     #
     {:ok, socket} = :gen_tcp.listen(6379, [:binary, active: false, reuseaddr: true])
-    {:ok, _client} = :gen_tcp.accept(socket)
+    {:ok, client} = :gen_tcp.accept(socket)
+
+    serve(client)
+  end
+
+  defp serve(client) do
+    client
+    |> read_line()
+    |> get_resp()
+    |> write_resp(client)
+
+    serve(client)
+  end
+
+  defp read_line(socket) do
+    {:ok, data} = :gen_tcp.recv(socket, 0)
+    data
+  end
+
+  defp write_resp(data, socket) do
+    :gen_tcp.send(socket, data)
+    IO.puts("Sent #{data}")
+  end
+
+  defp get_resp(_data) do
+    simple_string("PONG")
+  end
+
+  defp simple_string(data) do
+    "+#{data}\r\n"
   end
 end
